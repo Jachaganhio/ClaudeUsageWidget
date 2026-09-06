@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>ClaudeUsageWidget — dual usage meters</title>
+  <desc>Original geometric artwork. MIT license. No third-party imagery.</desc>
+  <defs><linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2b3647"/><stop offset="1" stop-color="#0f141f"/></linearGradient></defs>
+  <rect x="96" y="96" width="832" height="832" rx="184" fill="url(#tile)" stroke="#424f61" stroke-width="3"/>
+  <path d="M 321.78827586081877 680.2117241391813 A 269.0 269.0 0 1 1 702.2117241391813 680.2117241391812" fill="none" stroke="#3d4a59" stroke-width="65" stroke-linecap="round"/>
+  <path d="M 393.9131675418466 608.0868324581535 A 167.0 167.0 0 1 1 630.0868324581535 608.0868324581534" fill="none" stroke="#3d4a59" stroke-width="60" stroke-linecap="round"/>
+  <path d="M 321.78827586081877 680.2117241391813 A 269.0 269.0 0 1 1 775.410936057255 435.45021754909817" fill="none" stroke="#38d9cc" stroke-width="65" stroke-linecap="round"/>
+  <path d="M 393.9131675418466 608.0868324581535 A 167.0 167.0 0 0 1 580.7228978870531 337.7956528018807" fill="none" stroke="#ffa85c" stroke-width="60" stroke-linecap="round"/>
+  <circle cx="512" cy="490" r="31" fill="#ebf5fa"/>
+  <rect x="421" y="763" width="182" height="25" rx="12.5" fill="#788a9e"/>
+</svg>

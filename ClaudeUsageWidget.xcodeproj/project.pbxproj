@@ -44,6 +44,11 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+        B0123456789ABCDEF0000002 /* App exceptions */ = {
+            isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+            membershipExceptions = (Info.plist,);
+            target = A1B2C3BE2F700000000000AA /* ClaudeUsageWidget */;
+        };
 		A1B2C3E82F700002000000AA /* Exceptions for "ClaudeUsageWidgetExtension" folder in "ClaudeUsageWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -54,8 +59,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+        B0123456789ABCDEF0000001 /* Shared */ = {
+            isa = PBXFileSystemSynchronizedRootGroup;
+            path = Shared;
+            sourceTree = "<group>";
+        };
 		A1B2C3C12F700000000000AA /* ClaudeUsageWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (B0123456789ABCDEF0000002 /* App exceptions */,);
 			path = ClaudeUsageWidget;
 			sourceTree = "<group>";
 		};
@@ -92,6 +103,7 @@
 		A1B2C3B62F700000000000AA = {
 			isa = PBXGroup;
 			children = (
+                B0123456789ABCDEF0000001 /* Shared */,
 				A1B2C3C12F700000000000AA /* ClaudeUsageWidget */,
 				A1B2C3D72F700001000000AA /* ClaudeUsageWidgetExtension */,
 				A1B2C3D22F700001000000AA /* Frameworks */,
@@ -135,6 +147,7 @@
 				A1B2C3E62F700002000000AA /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+                B0123456789ABCDEF0000001 /* Shared */,
 				A1B2C3C12F700000000000AA /* ClaudeUsageWidget */,
 			);
 			name = ClaudeUsageWidget;
@@ -157,6 +170,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+                B0123456789ABCDEF0000001 /* Shared */,
 				A1B2C3D72F700001000000AA /* ClaudeUsageWidgetExtension */,
 			);
 			name = ClaudeUsageWidgetExtension;
@@ -369,7 +383,7 @@
 				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
@@ -379,13 +393,12 @@
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "dev.huan.ClaudeUsageWidget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -398,7 +411,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
@@ -408,13 +421,12 @@
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "dev.huan.ClaudeUsageWidget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -430,12 +442,12 @@
 				CODE_SIGNING_REQUIRED = YES;
 				CODE_SIGN_ENTITLEMENTS = ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ClaudeUsageWidgetExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Claude Usage";
+				INFOPLIST_KEY_CFBundleDisplayName = "Claude & Codex Usage";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -443,7 +455,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "dev.huan.ClaudeUsageWidget.WidgetExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -463,12 +475,12 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ClaudeUsageWidgetExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Claude Usage";
+				INFOPLIST_KEY_CFBundleDisplayName = "Claude & Codex Usage";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -476,7 +488,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "dev.huan.ClaudeUsageWidget.WidgetExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

@@ -1,144 +1,154 @@
 import SwiftUI
-import Darwin
-
-private enum ConfigLocation {
-    static var url: URL {
-        if let passwd = getpwuid(getuid()) {
-            return URL(fileURLWithPath: String(cString: passwd.pointee.pw_dir), isDirectory: true)
-                .appendingPathComponent(".claude", isDirectory: true)
-                .appendingPathComponent("claude-usage-widget.json", isDirectory: false)
-        }
-
-        return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".claude", isDirectory: true)
-            .appendingPathComponent("claude-usage-widget.json", isDirectory: false)
-    }
-}
+import WidgetKit
 
 struct ContentView: View {
     @State private var sessionKey = ""
     @State private var organizationId = ""
     @State private var oauthToken = ""
+    @State private var claudeEnabled = true
+    @State private var codexEnabled = true
+    @State private var codexAccessToken = ""
+    @State private var codexAccountId = ""
     @State private var statusMessage = ""
     @State private var isSuccess = false
-
-    private let configURL = ConfigLocation.url
+    @State private var isRefreshing = false
+    @State private var snapshot: UsageSnapshot?
 
     var body: some View {
-        VStack(spacing: 20) {
-            // Header
-            HStack(spacing: 10) {
-                Image(systemName: "chart.bar.fill")
-                    .font(.title)
-                    .foregroundStyle(.purple)
-                VStack(alignment: .leading) {
-                    Text("Claude Usage Widget")
-                        .font(.title2.bold())
-                    Text("Configure your API credentials")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 10) {
+                    Image(systemName: "chart.bar.fill").font(.title).foregroundStyle(.teal)
+                    VStack(alignment: .leading) {
+                        Text("Claude & Codex Usage").font(.title2.bold())
+                        Text("Subscription usage · Claude, Fable and Codex")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button(action: { Task { await refresh() } }) {
+                        Label(isRefreshing ? "Refreshing…" : "Refresh", systemImage: "arrow.clockwise")
+                    }
+                    .disabled(isRefreshing)
                 }
-                Spacer()
-            }
 
-            Divider()
-
-            // OAuth section
-            GroupBox("OAuth Token (recommended)") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("If you use Claude Code with OAuth, paste your token here.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("OAuth Bearer Token", text: $oauthToken)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 12, design: .monospaced))
+                if let snapshot {
+                    HStack(alignment: .top, spacing: 20) {
+                        ProviderUsageView(usage: snapshot.claude)
+                        Divider()
+                        ProviderUsageView(usage: snapshot.codex)
+                    }
+                    .padding(14)
+                    .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
+                    Text("Used percentage · Updated \(snapshot.date.formatted(date: .omitted, time: .shortened))")
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                .padding(8)
-            }
 
-            GroupBox("Session Key (alternative)") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Get your sessionKey from claude.ai browser cookies and your org ID from the API.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    TextField("Session Key (sk-ant-sid01-...)", text: $sessionKey)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 12, design: .monospaced))
-                    TextField("Organization ID (uuid)", text: $organizationId)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 12, design: .monospaced))
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle("Show Claude and Fable", isOn: $claudeEnabled)
+                        Text("Fable's weekly limit is read with your Claude usage; no extra token is needed.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        SecureField("Claude OAuth Bearer Token (preferred)", text: $oauthToken)
+                        Text("Or use a browser session key:").font(.caption).foregroundStyle(.secondary)
+                        SecureField("Session Key (sk-ant-sid01-…)", text: $sessionKey)
+                        TextField("Organization ID (UUID)", text: $organizationId)
+                    }
+                    .textFieldStyle(.roundedBorder)
+                    .padding(8)
+                } label: { Text("Claude").fontWeight(.semibold) }
+
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle("Show Codex", isOn: $codexEnabled)
+                        Text("Automatically reads the current ChatGPT login from ~/.codex/auth.json. Sign in with Codex CLI first. API keys do not provide subscription usage.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        DisclosureGroup("Manual token (overrides automatic login)") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                SecureField("Codex access token", text: $codexAccessToken)
+                                TextField("ChatGPT account ID (optional)", text: $codexAccountId)
+                                Text("Manual tokens expire. Clear the token to use the local Codex login again.")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }.padding(.top, 8)
+                        }
+                    }
+                    .textFieldStyle(.roundedBorder)
+                    .padding(8)
+                } label: { Text("Codex").fontWeight(.semibold) }
+
+                if !statusMessage.isEmpty {
+                    Text(statusMessage).font(.caption).foregroundStyle(isSuccess ? .green : .red)
                 }
-                .padding(8)
-            }
-
-            // Status
-            if !statusMessage.isEmpty {
-                Text(statusMessage)
-                    .font(.caption)
-                    .foregroundStyle(isSuccess ? .green : .red)
-                    .padding(.horizontal)
-            }
-
-            HStack {
-                Button("Save Configuration") {
-                    saveConfig()
+                HStack {
+                    Button("Save & Refresh") { saveConfig() }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isRefreshing)
+                    Button("Load Existing") { loadConfig() }
+                        .disabled(isRefreshing)
+                    Spacer()
                 }
-                .buttonStyle(.borderedProminent)
-
-                Button("Load Existing") {
-                    loadConfig()
-                }
-                .buttonStyle(.bordered)
+                Text("Config: ~/.claude/claude-usage-widget.json\nAdd the widget: right-click desktop → Edit Widgets → search Claude or Codex.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
-
-            Spacer()
-
-            Text("Config saved to: ~/.claude/claude-usage-widget.json")
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(.tertiary)
+            .padding(24)
         }
-        .padding(24)
-        .frame(minWidth: 500, minHeight: 400)
-        .onAppear {
-            loadConfig()
+        .frame(minWidth: 620, minHeight: 680)
+        .task {
+            if loadConfig() { await refresh() }
         }
     }
 
-    func saveConfig() {
-        let config: [String: String?] = [
-            "sessionKey": sessionKey.isEmpty ? nil : sessionKey,
-            "organizationId": organizationId.isEmpty ? nil : organizationId,
-            "oauthToken": oauthToken.isEmpty ? nil : oauthToken
-        ]
+    private var config: WidgetConfig {
+        WidgetConfig(sessionKey: sessionKey.nonempty, organizationId: organizationId.nonempty,
+                     oauthToken: oauthToken.nonempty, claudeEnabled: claudeEnabled,
+                     codexEnabled: codexEnabled, codexAccessToken: codexAccessToken.nonempty,
+                     codexAccountId: codexAccountId.nonempty)
+    }
 
+    private func saveConfig() {
+        if claudeEnabled, sessionKey.nonempty != nil,
+           UUID(uuidString: organizationId.trimmingCharacters(in: .whitespacesAndNewlines)) == nil {
+            statusMessage = "Enter a valid Claude organization UUID for the session key."
+            isSuccess = false
+            return
+        }
         do {
-            let data = try JSONSerialization.data(
-                withJSONObject: config.compactMapValues { $0 },
-                options: [.prettyPrinted, .sortedKeys]
-            )
-            // Ensure .claude directory exists
-            let dir = configURL.deletingLastPathComponent()
-            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            try data.write(to: configURL)
-            statusMessage = "Configuration saved!"
+            try config.save()
+            WidgetCenter.shared.reloadTimelines(ofKind: "ClaudeUsageWidget")
+            statusMessage = "Configuration saved. Widget refresh requested."
             isSuccess = true
+            Task { await refresh() }
         } catch {
             statusMessage = "Failed to save: \(error.localizedDescription)"
             isSuccess = false
         }
     }
 
-    func loadConfig() {
-        guard let data = try? Data(contentsOf: configURL),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: String] else {
-            return
+    @discardableResult
+    private func loadConfig() -> Bool {
+        do {
+            let config = try WidgetConfig.load()
+            sessionKey = config.sessionKey ?? ""
+            organizationId = config.organizationId ?? ""
+            oauthToken = config.oauthToken ?? ""
+            claudeEnabled = config.claudeEnabled != false
+            codexEnabled = config.codexEnabled != false
+            codexAccessToken = config.codexAccessToken ?? ""
+            codexAccountId = config.codexAccountId ?? ""
+            statusMessage = ""
+            return true
+        } catch {
+            statusMessage = "Cannot load configuration: \(error.localizedDescription)"
+            isSuccess = false
+            return false
         }
-        sessionKey = json["sessionKey"] ?? ""
-        organizationId = json["organizationId"] ?? ""
-        oauthToken = json["oauthToken"] ?? ""
+    }
+
+    private func refresh() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
+        snapshot = await UsageClient().fetch(config: config)
     }
 }
 
-#Preview {
-    ContentView()
-}
+#Preview { ContentView() }
