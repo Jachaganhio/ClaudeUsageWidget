@@ -141,6 +141,10 @@ curl -s https://claude.ai/api/organizations \
 
 被关掉的提供方会彻底消失：不再显示 "Disabled" 占位文字，不再显示分隔线，也不会再请求它的接口。剩下的那一个占满整个小组件宽度，并在包括 small 在内的所有尺寸上显示重置时间。至少要保留一个提供方，两个都关时应用会拒绝保存。
 
+![只显示 Claude 的小组件](screenshots/single-provider-claude-only.png)
+
+*关掉 Codex 后，Claude 独占整个小组件宽度，即使是 small 尺寸也能显示每项额度的重置倒计时。*
+
 ---
 
 ## 工作原理

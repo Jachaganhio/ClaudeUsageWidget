@@ -141,6 +141,10 @@ If you subscribe to just one of them, hide the other. Use **Show Claude and Fabl
 
 A provider that is off disappears completely — no "Disabled" placeholder, no divider, and no request to its endpoint. The remaining provider takes the full widget width and shows reset times in every widget size, including small. At least one provider must stay on; the app refuses to save with both off.
 
+![Claude-only widget](screenshots/single-provider-claude-only.png)
+
+*Codex turned off — Claude takes the full widget and shows reset countdowns for every metric, even in the small size.*
+
 ---
 
 ## How It Works
