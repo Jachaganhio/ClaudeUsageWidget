@@ -22,6 +22,7 @@ macOS 桌面小组件（WidgetKit），同时监控你的 Claude、Claude Fable 
 - **每周用量** + 进度条
 - **Fable 独立周额度** + 重置时间
 - **Codex 用量** 自动读取本机 ChatGPT 登录，按实际窗口显示
+- **单提供方模式** 关掉 Claude 或 Codex，小组件只显示另一个，占满整个宽度，且各尺寸都显示重置时间
 - **应用内仪表板** 手动刷新、分别开关 Claude / Codex
 - **重置倒计时**
 - **颜色随用量变化** 绿 → 黄 → 橙 → 红
@@ -117,13 +118,28 @@ curl -s https://claude.ai/api/organizations \
 }
 ```
 
-原配置兼容；`claudeEnabled` / `codexEnabled` 可分别开关提供方。保存时保留未知字段、原子写入，并设置文件权限为 `0600`。
+原配置兼容。保存时保留未知字段、原子写入，并设置文件权限为 `0600`。
 
 ### 3. 添加小组件
 
 1. 右键桌面 → **编辑小组件**
 2. 搜索 **"Claude"** 或 **"Codex"**
 3. 选择尺寸并添加
+
+---
+
+## 只显示 Claude 或只显示 Codex
+
+只订阅其中一家时，把另一家关掉即可。在应用里使用 **Show Claude and Fable** / **Show Codex** 开关，或在配置文件里设置 `claudeEnabled` / `codexEnabled`：
+
+```json
+{
+  "oauthToken": "your-oauth-bearer-token",
+  "codexEnabled": false
+}
+```
+
+被关掉的提供方会彻底消失：不再显示 "Disabled" 占位文字，不再显示分隔线，也不会再请求它的接口。剩下的那一个占满整个小组件宽度，并在包括 small 在内的所有尺寸上显示重置时间。至少要保留一个提供方，两个都关时应用会拒绝保存。
 
 ---
 
@@ -147,7 +163,7 @@ curl -s https://claude.ai/api/organizations \
 
 百分比表示**已用**额度。缺失数据显示 `—`，不当作 0%；不自行按 50% 换算 Fable 额度。Codex 展示通用订阅额度，不汇总 Spark 等附加额度或 API 账单。
 
-两家请求并发执行、错误独立展示。401 提示更新凭证，403 提示检查登录及访问权限，429 提示等待下一次刷新。中、大尺寸显示重置时间，大尺寸显示更新时间。订阅用量接口可能变化。
+两家请求并发执行、错误独立展示；被关掉的提供方不会发出请求。401 提示更新凭证，403 提示检查登录及访问权限，429 提示等待下一次刷新。中、大尺寸显示重置时间，只显示单个提供方时各尺寸都显示重置时间，大尺寸显示更新时间。订阅用量接口可能变化。
 
 ---
 
@@ -174,7 +190,7 @@ ClaudeUsageWidget/
 swift test
 ./scripts/build-local.sh
 
-# 生成三种尺寸、深浅色、正常/失败/缺失数据的 18 张 SwiftUI 预览
+# 生成三种尺寸、深浅色、正常/失败/缺失/仅 Claude/仅 Codex 的 30 张 SwiftUI 预览
 mkdir -p build
 swiftc Shared/UsageModels.swift Shared/UsageViews.swift scripts/RenderPreviews.swift -o build/render-previews
 build/render-previews

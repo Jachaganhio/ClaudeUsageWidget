@@ -69,17 +69,23 @@ struct UsageMetric: Identifiable, Sendable {
     }
 }
 
-struct ProviderUsage: Sendable {
+struct ProviderUsage: Identifiable, Sendable {
     let name: String
     var metrics: [UsageMetric] = []
     var error: String?
     var isEnabled = true
+
+    var id: String { name }
 }
 
 struct UsageSnapshot: Sendable {
     let date: Date
     let claude: ProviderUsage
     let codex: ProviderUsage
+
+    /// Providers the user asked to see. A disabled provider is hidden rather than
+    /// spending widget space on a "Disabled" placeholder.
+    var visibleProviders: [ProviderUsage] { [claude, codex].filter(\.isEnabled) }
 
     static var preview: UsageSnapshot {
         let now = Date()

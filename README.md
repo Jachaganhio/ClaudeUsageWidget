@@ -22,6 +22,7 @@ A macOS desktop widget (WidgetKit) that monitors Claude, Claude Fable, and Codex
 - **Weekly usage** with progress bar
 - **Separate Fable weekly usage** with reset time
 - **Codex usage** from your local ChatGPT login, labelled by actual window duration
+- **Single-provider mode** — turn off Claude or Codex and the widget shows only the other one, full width, with reset times in every size
 - **In-app dashboard** with manual refresh and independent provider switches
 - **Reset countdown** for both windows
 - **Color-coded** green → yellow → orange → red
@@ -117,13 +118,28 @@ For Keychain-only credentials, a custom `CODEX_HOME`, or another location, enter
 }
 ```
 
-Existing configuration remains compatible. `claudeEnabled` / `codexEnabled` toggle each provider. Saves preserve unknown fields, replace the file atomically, and set owner-only permissions (`0600`).
+Existing configuration remains compatible. Saves preserve unknown fields, replace the file atomically, and set owner-only permissions (`0600`).
 
 ### 3. Add Widget
 
 1. Right-click desktop → **Edit Widgets...**
 2. Search **"Claude"** or **"Codex"**
 3. Choose size and add
+
+---
+
+## Show Only Claude or Only Codex
+
+If you subscribe to just one of them, hide the other. Use **Show Claude and Fable** / **Show Codex** in the app, or set `claudeEnabled` / `codexEnabled` in the config file:
+
+```json
+{
+  "oauthToken": "your-oauth-bearer-token",
+  "codexEnabled": false
+}
+```
+
+A provider that is off disappears completely — no "Disabled" placeholder, no divider, and no request to its endpoint. The remaining provider takes the full widget width and shows reset times in every widget size, including small. At least one provider must stay on; the app refuses to save with both off.
 
 ---
 
@@ -147,7 +163,7 @@ Returns:
 
 Percentages represent **usage consumed**. Missing data shows `—`, not 0%; Fable percentages are not rescaled by an inferred 50% allowance. Codex shows the general subscription pool, not additional pools such as Spark or API billing.
 
-Requests run concurrently with independent errors. HTTP 401 prompts credential renewal, 403 prompts checking login and access, and 429 prompts waiting until the next refresh. Medium and large widgets include reset times; large includes the update timestamp. Subscription usage endpoints may change.
+Requests run concurrently with independent errors. A disabled provider is never requested. HTTP 401 prompts credential renewal, 403 prompts checking login and access, and 429 prompts waiting until the next refresh. Medium and large widgets include reset times, as does any size showing a single provider; large includes the update timestamp. Subscription usage endpoints may change.
 
 ---
 
@@ -174,7 +190,7 @@ ClaudeUsageWidget/
 swift test
 ./scripts/build-local.sh
 
-# 18 SwiftUI previews: three sizes × light/dark × normal/error/missing data
+# 30 SwiftUI previews: three sizes × light/dark × normal/error/missing/claude-only/codex-only
 mkdir -p build
 swiftc Shared/UsageModels.swift Shared/UsageViews.swift scripts/RenderPreviews.swift -o build/render-previews
 build/render-previews

@@ -94,6 +94,24 @@ final class UsageCoreTests: XCTestCase {
         XCTAssertEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
     }
 
+    func testDisabledProviderIsHiddenInsteadOfShownAsDisabled() {
+        let both = UsageSnapshot.preview
+        XCTAssertEqual(both.visibleProviders.map(\.name), ["Claude", "Codex"])
+        let claudeOnly = UsageSnapshot(date: Date(), claude: both.claude,
+                                       codex: ProviderUsage(name: "Codex", isEnabled: false))
+        XCTAssertEqual(claudeOnly.visibleProviders.map(\.name), ["Claude"])
+        let codexOnly = UsageSnapshot(date: Date(), claude: ProviderUsage(name: "Claude", isEnabled: false),
+                                      codex: both.codex)
+        XCTAssertEqual(codexOnly.visibleProviders.map(\.name), ["Codex"])
+        let neither = UsageSnapshot(date: Date(), claude: ProviderUsage(name: "Claude", isEnabled: false),
+                                    codex: ProviderUsage(name: "Codex", isEnabled: false))
+        XCTAssertTrue(neither.visibleProviders.isEmpty)
+        // An errored provider stays visible so the reason still reaches the widget.
+        let failed = UsageSnapshot(date: Date(), claude: ProviderUsage(name: "Claude", error: "boom"),
+                                   codex: ProviderUsage(name: "Codex", isEnabled: false))
+        XCTAssertEqual(failed.visibleProviders.map(\.name), ["Claude"])
+    }
+
     func testInvalidConfigIsNotSilentlyOverwritten() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }

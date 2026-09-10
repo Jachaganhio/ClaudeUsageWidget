@@ -32,10 +32,18 @@ struct ContentView: View {
                 }
 
                 if let snapshot {
+                    // Mirror the widget: only the providers you turned on are shown.
                     HStack(alignment: .top, spacing: 20) {
-                        ProviderUsageView(usage: snapshot.claude)
-                        Divider()
-                        ProviderUsageView(usage: snapshot.codex)
+                        if snapshot.visibleProviders.isEmpty {
+                            Text("Both providers are hidden. Turn one on below to fill the widget.")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Spacer()
+                        } else {
+                            ForEach(snapshot.visibleProviders) { usage in
+                                if usage.id != snapshot.visibleProviders.first?.id { Divider() }
+                                ProviderUsageView(usage: usage)
+                            }
+                        }
                     }
                     .padding(14)
                     .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
@@ -46,6 +54,8 @@ struct ContentView: View {
                 GroupBox {
                     VStack(alignment: .leading, spacing: 10) {
                         Toggle("Show Claude and Fable", isOn: $claudeEnabled)
+                        Text("Turn this off to make the widget a Codex-only widget; Claude then takes no space at all.")
+                            .font(.caption).foregroundStyle(.secondary)
                         Text("Fable's weekly limit is read with your Claude usage; no extra token is needed.")
                             .font(.caption).foregroundStyle(.secondary)
                         SecureField("Claude OAuth Bearer Token (preferred)", text: $oauthToken)
@@ -60,6 +70,8 @@ struct ContentView: View {
                 GroupBox {
                     VStack(alignment: .leading, spacing: 10) {
                         Toggle("Show Codex", isOn: $codexEnabled)
+                        Text("Turn this off if you do not use Codex; the widget then shows Claude alone, with reset times in every size.")
+                            .font(.caption).foregroundStyle(.secondary)
                         Text("Automatically reads the current ChatGPT login from ~/.codex/auth.json. Sign in with Codex CLI first. API keys do not provide subscription usage.")
                             .font(.caption).foregroundStyle(.secondary)
                         DisclosureGroup("Manual token (overrides automatic login)") {
@@ -105,6 +117,11 @@ struct ContentView: View {
     }
 
     private func saveConfig() {
+        guard claudeEnabled || codexEnabled else {
+            statusMessage = "Turn on Claude or Codex — the widget needs at least one provider."
+            isSuccess = false
+            return
+        }
         if claudeEnabled, sessionKey.nonempty != nil,
            UUID(uuidString: organizationId.trimmingCharacters(in: .whitespacesAndNewlines)) == nil {
             statusMessage = "Enter a valid Claude organization UUID for the session key."

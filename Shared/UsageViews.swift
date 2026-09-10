@@ -83,9 +83,7 @@ struct ProviderUsageView: View {
                 Text(usage.name).font(.system(size: compact ? (showReset ? 12 : 11) : 14, weight: .bold))
                 Spacer(minLength: 0)
             }
-            if !usage.isEnabled {
-                Text("Disabled").font(.caption).foregroundStyle(.secondary)
-            } else if let error = usage.error {
+            if let error = usage.error {
                 Text(error)
                     .font(.system(size: compact ? 10 : 12))
                     .foregroundStyle(.secondary)
@@ -105,6 +103,10 @@ struct UsageDashboardView: View {
     var small = false
     var large = false
 
+    private var providers: [ProviderUsage] { snapshot.visibleProviders }
+    /// One provider owns the whole widget, so reset times fit in every family.
+    private var isSolo: Bool { providers.count == 1 }
+
     var body: some View {
         VStack(alignment: .leading, spacing: small ? 3 : 8) {
             if large {
@@ -114,15 +116,17 @@ struct UsageDashboardView: View {
                     Text("Used").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            if small || large {
-                ProviderUsageView(usage: snapshot.claude, compact: !large, showReset: large)
-                Divider()
-                ProviderUsageView(usage: snapshot.codex, compact: !large, showReset: large)
+            if providers.isEmpty {
+                Text("Turn on Claude or Codex in the app.")
+                    .font(.system(size: small ? 10 : 12))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            } else if small || large || isSolo {
+                stacked
             } else {
                 HStack(alignment: .top, spacing: 14) {
-                    ProviderUsageView(usage: snapshot.claude, compact: true)
-                    Divider()
-                    ProviderUsageView(usage: snapshot.codex, compact: true)
+                    dividedProviders(compact: true, showReset: false)
                 }
             }
             if large {
@@ -135,6 +139,21 @@ struct UsageDashboardView: View {
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    private var stacked: some View {
+        VStack(alignment: .leading, spacing: small ? 3 : 8) {
+            dividedProviders(compact: !large, showReset: large || isSolo)
+            if isSolo && !large { Spacer(minLength: 0) }
+        }
+    }
+
+    @ViewBuilder
+    private func dividedProviders(compact: Bool, showReset: Bool) -> some View {
+        ForEach(providers) { usage in
+            if usage.id != providers.first?.id { Divider() }
+            ProviderUsageView(usage: usage, compact: compact, showReset: showReset)
         }
     }
 }

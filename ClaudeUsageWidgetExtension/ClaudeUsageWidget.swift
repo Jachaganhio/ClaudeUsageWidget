@@ -77,3 +77,17 @@ struct ClaudeUsageWidget: Widget {
 } timeline: {
     ClaudeUsageEntry.placeholder
 }
+
+#Preview("Claude only, medium", as: .systemMedium) {
+    ClaudeUsageWidget()
+} timeline: {
+    ClaudeUsageEntry(snapshot: UsageSnapshot(date: Date(), claude: UsageSnapshot.preview.claude,
+                                             codex: ProviderUsage(name: "Codex", isEnabled: false)))
+}
+
+#Preview("Codex only, medium", as: .systemMedium) {
+    ClaudeUsageWidget()
+} timeline: {
+    ClaudeUsageEntry(snapshot: UsageSnapshot(date: Date(), claude: ProviderUsage(name: "Claude", isEnabled: false),
+                                             codex: UsageSnapshot.preview.codex))
+}
