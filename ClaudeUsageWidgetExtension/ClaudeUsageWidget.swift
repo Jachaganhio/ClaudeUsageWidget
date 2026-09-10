@@ -18,7 +18,16 @@ struct ClaudeUsageProvider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<ClaudeUsageEntry>) -> Void) {
         Task {
             let entry = await load()
-            completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(300))))
+            // Reset boundaries get their own future entries so WidgetKit can switch to a
+            // neutral "Refreshing…" state exactly on time, without waiting on a real reload
+            // (which macOS may delay well past the reset). See UsageSnapshot.upcomingResets.
+            let boundaries = entry.snapshot.upcomingResets
+            let entries = [entry] + boundaries.map { ClaudeUsageEntry(snapshot: entry.snapshot.clearingResetsPast($0)) }
+            let regularReload = Date().addingTimeInterval(300)
+            // Also ask the system to try a real reload shortly after the soonest reset, so
+            // fresh percentages replace the stale ones as quickly as the OS allows.
+            let nextReload = boundaries.first.map { min(regularReload, $0.addingTimeInterval(5)) } ?? regularReload
+            completion(Timeline(entries: entries, policy: .after(nextReload)))
         }
     }
 

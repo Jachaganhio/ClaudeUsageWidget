@@ -63,6 +63,12 @@ struct UsageRow: View {
                     Text("Not reported by account")
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
+                } else {
+                    // Reset time passed but a fresh fetch hasn't landed yet — say so instead
+                    // of leaving a blank row or letting the countdown count upward forever.
+                    Text("Refreshing…")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
                 }
             }
         }

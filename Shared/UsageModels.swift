@@ -67,6 +67,14 @@ struct UsageMetric: Identifiable, Sendable {
         guard let percent, percent.isFinite else { return "—" }
         return percent.formatted(.number.precision(.fractionLength(0...1))) + "%"
     }
+
+    /// A copy with the countdown cleared once its target has passed `boundary`. Percent is
+    /// left as-is: we know it's stale at that point, but we don't fabricate a 0% reset
+    /// without confirming it from the server.
+    func clearingResetIfPast(_ boundary: Date) -> UsageMetric {
+        guard let resetsAt, resetsAt <= boundary else { return self }
+        return UsageMetric(id: id, title: title, percent: percent, resetsAt: nil)
+    }
 }
 
 struct ProviderUsage: Sendable {
@@ -74,12 +82,34 @@ struct ProviderUsage: Sendable {
     var metrics: [UsageMetric] = []
     var error: String?
     var isEnabled = true
+
+    func clearingResetsPast(_ boundary: Date) -> ProviderUsage {
+        var copy = self
+        copy.metrics = metrics.map { $0.clearingResetIfPast(boundary) }
+        return copy
+    }
 }
 
 struct UsageSnapshot: Sendable {
     let date: Date
     let claude: ProviderUsage
     let codex: ProviderUsage
+
+    /// Distinct future reset timestamps across both providers, ascending. Used to schedule
+    /// timeline entries exactly at each boundary instead of on a fixed reload cadence. A
+    /// disabled provider always has an empty metrics array, so it naturally contributes none.
+    var upcomingResets: [Date] {
+        Array(Set([claude, codex].flatMap(\.metrics).compactMap(\.resetsAt).filter { $0 > date })).sorted()
+    }
+
+    /// A copy dated at `boundary` where any metric whose reset has already passed by then
+    /// has its countdown cleared. `Text(_:style:.relative)` keeps counting past its target
+    /// with no way to know the window actually rolled over, so once we schedule this entry
+    /// the row falls back to a neutral "Refreshing…" state instead of counting upward.
+    func clearingResetsPast(_ boundary: Date) -> UsageSnapshot {
+        UsageSnapshot(date: boundary, claude: claude.clearingResetsPast(boundary),
+                      codex: codex.clearingResetsPast(boundary))
+    }
 
     static var preview: UsageSnapshot {
         let now = Date()

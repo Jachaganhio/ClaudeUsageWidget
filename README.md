@@ -27,7 +27,8 @@ A macOS desktop widget (WidgetKit) that monitors Claude, Claude Fable, and Codex
 - **Color-coded** green → yellow → orange → red
 - **Three widget sizes** — small, medium, large
 - **Dual auth** — OAuth token or session key
-- **Auto-refresh** requested every 5 minutes; macOS controls actual scheduling
+- **Auto-refresh** requested every 5 minutes, and right after each metric's reset time; macOS controls actual scheduling
+- **No stale countdowns** — once a reset time passes, the countdown stops and shows "Refreshing…" instead of counting upward past zero while waiting for fresh data
 - **Original app icon** included under MIT, with no third-party icon assets
 
 ---

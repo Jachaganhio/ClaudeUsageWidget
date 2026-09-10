@@ -94,6 +94,47 @@ final class UsageCoreTests: XCTestCase {
         XCTAssertEqual((attributes[.posixPermissions] as? NSNumber)?.intValue, 0o600)
     }
 
+    func testUpcomingResetsAreFutureDedupedAndSorted() {
+        let now = Date()
+        let past = now.addingTimeInterval(-10)
+        let soon = now.addingTimeInterval(100)
+        let later = now.addingTimeInterval(200)
+        let claude = ProviderUsage(name: "Claude", metrics: [
+            UsageMetric(id: "a", title: "A", percent: 10, resetsAt: past),
+            UsageMetric(id: "b", title: "B", percent: 20, resetsAt: later)
+        ])
+        let codex = ProviderUsage(name: "Codex", metrics: [
+            UsageMetric(id: "c", title: "C", percent: 30, resetsAt: soon),
+            UsageMetric(id: "d", title: "D", percent: 40, resetsAt: later) // duplicate of claude's
+        ])
+        let snapshot = UsageSnapshot(date: now, claude: claude, codex: codex)
+        XCTAssertEqual(snapshot.upcomingResets, [soon, later])
+
+        let disabledCodex = UsageSnapshot(date: now, claude: claude, codex: ProviderUsage(name: "Codex", isEnabled: false))
+        XCTAssertEqual(disabledCodex.upcomingResets, [later])
+    }
+
+    func testClearingResetsPastBoundaryLeavesLaterResetsAndPercentagesIntact() {
+        let now = Date()
+        let justPassed = now.addingTimeInterval(5)
+        let stillFuture = now.addingTimeInterval(1000)
+        let claude = ProviderUsage(name: "Claude", metrics: [
+            UsageMetric(id: "five_hour", title: "5h Session", percent: 42, resetsAt: justPassed),
+            UsageMetric(id: "seven_day", title: "Weekly", percent: 10, resetsAt: stillFuture),
+            UsageMetric(id: "fable", title: "Fable · Weekly", percent: nil, resetsAt: nil)
+        ], error: nil)
+        let snapshot = UsageSnapshot(date: now, claude: claude, codex: ProviderUsage(name: "Codex", isEnabled: false))
+        let boundary = justPassed.addingTimeInterval(5)
+        let cleared = snapshot.clearingResetsPast(boundary)
+
+        XCTAssertEqual(cleared.date, boundary)
+        XCTAssertNil(cleared.claude.metrics[0].resetsAt, "Passed reset should be cleared")
+        XCTAssertEqual(cleared.claude.metrics[0].percent, 42, "Percent is left as-is, not fabricated to 0")
+        XCTAssertEqual(cleared.claude.metrics[1].resetsAt, stillFuture, "Future reset must not be touched")
+        XCTAssertNil(cleared.claude.metrics[2].resetsAt, "Already-nil reset stays nil")
+        XCTAssertFalse(cleared.codex.isEnabled, "Other provider fields are preserved untouched")
+    }
+
     func testInvalidConfigIsNotSilentlyOverwritten() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: url) }
